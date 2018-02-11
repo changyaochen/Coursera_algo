@@ -111,7 +111,7 @@ class Solution(object):
 							self.scc[self.i].add(child)
 
 		elif i_or_r == 'r':
-			# recursive call
+			# recursive call, it might cause recursion depth problem for large size graph
 			# base case
 			if start in self.visited_2:
 				return
@@ -126,7 +126,7 @@ class Solution(object):
 			return start  # only return a node when it is not 'back-tracked'
 
 		else:
-			raise Exception('Unknow choice.')
+			raise Exception('Unknown choice.')
 			 
 		
 	
@@ -138,16 +138,16 @@ class Solution(object):
 				tmp = self.dfs_1(node)
 				self.L.extend(tmp)
 		# print(self.L)
-		print('Done with first dfs!')
+		print('Done with the first dfs!')
 		
 		# second DFS call
 		while len(self.L) > 0:
-			start = self.L.pop()  # going from last finished nodes
+			start = self.L.pop()  # going with the reversed order in finished time
 			if start not in self.visited_2:
 				self.i += 1
 				self.scc[self.i] = set()
 				self.dfs_2(start, i_or_r='i')
-		print('Done with second dfs!')
+		print('Done with the second dfs!')
 
 		# get scc size
 		self.sizes = list(map(len, self.scc.values()))
@@ -158,9 +158,8 @@ class Solution(object):
 
 
 if __name__ == '__main__':
-	fname = 'hw1_debug_2738_240_140_42_36.txt'
+	# fname = 'hw1_debug_2738_240_140_42_36.txt'
 	fname = 'hw1.txt'
 	S = Solution(fname)
 	S.run()
-	# print(S.scc)
 	
