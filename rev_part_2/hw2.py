@@ -22,15 +22,11 @@ answer in the space provided.
 import re
 from heapq import heapify, heappush, heappop
 
-class Solution_1(object):
-	
-	# this is the `vanilla' version with O(mn) time
+class Solution(object):
 	
 	def __init__(self, fname):
 
 		self.G = {}  # it is an undirected graph, so in-edges are the same as out-edges
-		self.X = set()  # set of included nodes
-		self.dist = {}  # distance from start vortex
 
 		with open(fname, 'r') as f:
 			for line in f.readlines():
@@ -42,13 +38,18 @@ class Solution_1(object):
 
 				self.G[V] = E
 
-		# init the dist ditc
-		for n in self.G:
-			self.dist[n] = float('inf')
-
 
 
 	def dijkstra(self, start):
+
+		# this is the `vanilla' version with O(mn) time
+
+		self.X = set()  # set of included nodes
+		self.dist = {}  # distance from start vertex
+
+		# init the dist ditc
+		for n in self.G:
+			self.dist[n] = float('inf')
 		
 		self.dist[start] = 0
 		self.X.add(start)
@@ -64,7 +65,7 @@ class Solution_1(object):
 						self.dist[child] = min(self.dist[child], self.dist[n] + self.G[n][child])
 						candidates[child] = min(self.dist[child], candidates.get(child, float('inf')))
 
-			# now I have to decide which vortex to include
+			# now I have to decide which vertex to include
 			tmp_min = float('inf')
 			# print('candidates: ', candidates)
 			for x in candidates:
@@ -73,18 +74,49 @@ class Solution_1(object):
 					next_v = x
 			self.X.add(next_v)
 
+	def dijkstra_heap(self, start):
+
+		# this is the implementation with heap, to get O(mlogn) time
+		# modified from here: https://gist.github.com/kachayev/5990802
+
+		self.Q = [(0, start, [])]  # this is the unvisited heap
+		self.visited = set()  # this is the visited nodes
+		self.dist = {}  # collect distances
+
+		while self.Q:  # as long as there are still unvisited nodes
+			(cost, node, path) = heappop(self.Q)
+			if node not in self.visited:
+				self.dist[node] = cost
+
+			if node not in self.visited:
+				self.visited.add(node)  # put it in the visited list
+				path.append(node)
+
+				for child in self.G[node]:
+					if child not in self.visited:
+						heappush(self.Q, (self.G[node][child] + cost, child, path))
+
+
 
 
 
 if __name__ == '__main__':
 	fname = 'hw2.txt'
-	S = Solution_1(fname)
+	S = Solution(fname)
+
+	def get_answer(S):
+		nodes = [7,37,59,82,99,115,133,165,188,197]
+		answers = []
+		for n in nodes:
+			answers.append(S.dist[n])
+		print(answers)
+	
 	S.dijkstra(1)
-	nodes = [7,37,59,82,99,115,133,165,188,197]
-	answers = []
-	for n in nodes:
-		answers.append(S.dist[n])
-	print(answers)
+	get_answer(S)
+	
+	S.dijkstra_heap(1)
+	get_answer(S)
+	
 
 
 
