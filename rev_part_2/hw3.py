@@ -11,6 +11,8 @@ In the box below you should type the sum of these 10000 medians, modulo 10000 (i
 That is, you should compute (m1+m2+m3+⋯+m10000)mod10000.
 """
 
+from heapq import heappush, heappop
+
 class Solution(object):
 
 	def __init__(self):
@@ -23,12 +25,69 @@ class Solution(object):
 				line = f.readline()
 				if not line:
 					break
-				yield line.strip()
+				yield int(line.strip())
 
 	def get_median(self, fname):
-		for line in self.stream(fname):
-			print(line)
 
+		# first initate the low and high
+		tmp = []
+		running_median = []
+		for i, x in enumerate(self.stream(fname)):
+			if i == 0:
+				running_median.append(x)
+			if i >= 2:
+				break
+			tmp.append(x)
+		
+		low, high = [-1*min(tmp)], [max(tmp)]	# two heaps for the lower and higher half
+		running_median.append(-1*low[0])
+
+		for i, x in enumerate(self.stream(fname)):
+			if i < 2:
+				continue
+
+			# case 1, low and high is equal length
+			if len(low) - len(high) == 0:
+				if x < high[0]: 
+					heappush(low, -1*x)
+					running_median.append(-1*low[0])
+				else:
+					heappush(high, x)
+					running_median.append(high[0])
+				
+				continue
+			# case 2, low has one more element than high
+			if len(low) - len(high) == 1:
+				if x < high[0]:
+					heappush(low, -1*x)
+					tmp = -1*heappop(low)
+					heappush(high, tmp)
+				else:
+					heappush(high, x)
+				
+				running_median.append(-1*low[0])
+				continue
+			# case 3, high has one more element than low
+			if len(low) - len(high) == -1:
+				if x < high[0]:
+					heappush(low, -1*x)
+				else:
+					heappush(high, x)
+					tmp = heappop(high)
+					heappush(low, -1*tmp)
+
+				running_median.append(-1*low[0])
+				continue
+			else:
+				print('Error!')
+
+		# print('low: ', low)
+		# print('high: ', high)
+		# print('running_median: ', running_median)
+		result = sum(running_median) % 10000 
+		print(result)
+
+		return result
 
 if __name__ == '__main__':
 
