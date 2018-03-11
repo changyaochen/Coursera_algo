@@ -40,7 +40,7 @@ class Solution:
 				self.V.add(n2)
 
 		self.E.sort(reverse=True)  # descending order
-		print(self.E[0])
+		# print(self.E[0])
 
 	def clustering(self, k):
 		n_clusters = len(self.V)
