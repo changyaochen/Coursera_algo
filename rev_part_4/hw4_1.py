@@ -26,21 +26,78 @@ shortest shortest paths in the box below.
 class Solution:
 
 	def __init__(self, fname):
-		self.G = []
+		self.G = {}
 
 		with open(fname, 'r') as f:
 			self.n, self.m = list(map(int, f.readline().split()))
 			for line in f.readlines():
-				self.G.append(list(map(int, line.split())))
+				tail, head, weight = list(map(int, line.split()))
+				if tail not in self.G:
+					self.G[tail] = [(head, weight)]
+				else:
+					self.G[tail].append((head, weight))
 
-	def Bellman_Ford(self, s, t):
+		# one more pass to fill possible vertex with no out-edge
+		for i in range(1, self.n+1):
+			if i not in self.G:
+				self.G[i] = []
+
+	def Bellman_Ford(self, s, G):
 		"""
 		implementation of Bellman-Ford algorithm to find shorted path between 
-		vertex s and t
+		vertex s and all vertices, given the graph G. 
+
+		The format of G should be in the dictionary form of 
+		{tail_1: [(head_1, weight_1), head_2, weight_2), head_3, weight_3), ...], tail_2: [...], ....}
 		"""
-		pass
+		
+		# dp array, the shortest path from t to each vertex
+		n = len(G.keys())
+		dp = {v: float('inf') for v in range(1, n+1)}
+		dp[s] = 0  # init step
+
+		# main loop, run for n-1 time
+		print('Running Bellman-Ford algorithm...')
+		for i in range(n-1):
+			print('Step {} of {}...'.format(i, n), end='\r')
+			dp_last = dp.copy()
+			# inner for-loop, looping through all vertices
+			# I will 'push' the new values to the head vertex
+			for v in G.keys():
+				for h, w in G[v]:
+					dp[h] = min(dp[h], dp[v] + w)
+
+			# check for early stop
+			if dp == dp_last:
+				print('\nEarly termination of Bellman-Ford.')
+				return dp
+			else:
+				dp_last = dp.copy()
+
+		# check for negative cost cycle
+		for v in G.keys():
+			for h, w in G[v]:
+				dp[h] = min(dp[h], dp[v] + w)
+		if dp != dp_last:
+			print('\nThere is a negative cost cycle. Exit the algorithm.')
+			return None
+
+		return dp
+
+	def run(self):
+
+		return self.Bellman_Ford(1, self.G)
+
 
 
 if __name__ == '__main__':
-	fname = 'g1.txt'
+	fname = 'Bellman_Ford_debug.txt'
+	fname = 'g3.txt'
 	S = Solution(fname)
+	dp = S.run()
+
+
+
+
+
+
