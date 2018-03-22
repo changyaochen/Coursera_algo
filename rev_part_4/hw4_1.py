@@ -84,9 +84,19 @@ class Solution:
 
 		return dp
 
-	def run(self):
+	def APSP_1(self):
+		""" 
+		vanilla implemenation of all-pair shortest path
+		looping through all vertex, inovke Bellman-Ford at each vertex
+		"""
 
-		return self.Bellman_Ford(1, self.G)
+		res = float('inf')
+		for s in self.G.keys():
+			print('Working on node {} of total {} nodes.'.format(s, self.n))
+			dp = self.Bellman_Ford(s, self.G)
+			res = min(res, min(dp.values()))
+
+		return res
 
 
 
@@ -94,7 +104,7 @@ if __name__ == '__main__':
 	fname = 'Bellman_Ford_debug.txt'
 	fname = 'g3.txt'
 	S = Solution(fname)
-	dp = S.run()
+	res = S.APSP_1()
 
 
 
