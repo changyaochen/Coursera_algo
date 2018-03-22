@@ -26,8 +26,11 @@ shortest shortest paths in the box below.
 class Solution:
 
 	def __init__(self, fname):
-		self.G = {}
-
+		
+		self.G = {} # The format of G should be in the dictionary form of 
+		            # {tail_1: [(head_1, weight_1), head_2, weight_2), head_3, weight_3), ...], tail_2: [...], ....}
+					# we also use 1-base index for vertices
+		
 		with open(fname, 'r') as f:
 			self.n, self.m = list(map(int, f.readline().split()))
 			for line in f.readlines():
@@ -92,11 +95,19 @@ class Solution:
 
 		res = float('inf')
 		for s in self.G.keys():
-			print('Working on node {} of total {} nodes.'.format(s, self.n))
+			print('Working on node {} of total {} nodes.'.format(s, self.n), end='\r')
 			dp = self.Bellman_Ford(s, self.G)
 			res = min(res, min(dp.values()))
 
 		return res
+
+	def APSP_2(self):
+		# TODO: Floyd-Warshall algorithm
+		pass
+
+	def APSP_3(self):
+		# TODO: Johnson's algorithm
+		pass
 
 
 
