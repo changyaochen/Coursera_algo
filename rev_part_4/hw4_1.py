@@ -23,6 +23,7 @@ If two or more of the graphs have no negative-cost cycles, then enter the smalle
 shortest shortest paths in the box below.
 """
 import copy, time
+import numpy as np
 
 class Solution:
 
@@ -61,7 +62,7 @@ class Solution:
 		dp[s] = 0  # init step
 
 		# main loop, run for n-1 time
-		print('Running Bellman-Ford algorithm...')
+		# print('Running Bellman-Ford algorithm...')
 		for i in range(n-1):
 			print('Step {} of {}...'.format(i, n), end='\r')
 			dp_last = dp.copy()
@@ -94,10 +95,16 @@ class Solution:
 		looping through all vertex, inovke Bellman-Ford at each vertex
 		"""
 
+		t_start = time.time()
 		res = float('inf')
 		for s in self.G.keys():
-			print('Working on node {} of total {} nodes.'.format(s, self.n), end='\r')
+			print('Working on node {} of total {} nodes... time elapsed: {:5.2f} minutes.'\
+				.format(s, self.n, (time.time() - t_start)/60))
 			dp = self.Bellman_Ford(s, self.G)
+			
+			if dp is None:
+				print('\nThere is a negative cost cycle. Exit the algorithm.')
+				return None
 			res = min(res, min(dp.values()))
 
 		return res
@@ -105,36 +112,37 @@ class Solution:
 	def APSP_2(self):
 		# Floyd-Warshall algorithm
 
-		# n x n array, 0-based
-		A = [[float('inf') for _ in range(self.n)] for _ in range(self.n)]
+		# n x n array, in dict form 0-based
+		# A = [[float('inf') for _ in range(self.n)] for _ in range(self.n)]
+		
+		# n x n array, in dict form 0-based
+		# A = {i: {j: float('inf') for j in range(self.n)} for i in range(self.n)}
+		
+		# 3D array
+		A = np.full(shape=(self.n, self.n, self.n), fill_value=float('inf'))
 		
 		# first pass
 		for i in self.G:  # v is 1-based index
-			A[i-1][i-1] = 0
+			A[0, i-1, i-1] = 0
 			for (j, c) in self.G[i]:
-				A[i-1][j-1] = c
-		A_last = copy.deepcopy(A)
+				A[0, i-1, j-1] = c
 
 		# main loop, looping through k
 		t_start = time.time()
-		for k in range(100):
-			print('Running step {} of total {}... time elapsed {:6.2f} minutes.'\
-				.format(k, self.n, (time.time() - t_start)/60), end='\r')
+		for k in range(1, self.n):
+			print('Running step {} of total {}. Previous minimum: {}. Time elapsed: {:5.2f} minutes.'\
+				.format(k+1, self.n, A.min(), (time.time() - t_start)/60), end='\r')
 			for i in range(self.n):
 				for j in range(self.n):
-					A[i][j] = min(A_last[i][j], A_last[i][k] + A_last[k][j])
-
-			A_last = copy.deepcopy(A)
+					A[k, i, j] = min(A[k-1, i, j], (A[k-1, i, k] + A[k-1, k, j]))
 
 		# check for negative cost cycle, also check for result
-		res = float('inf')
 		for i in range(self.n):
-			res = min(A[i])
-			if A[i][i] < 0:
+			if A[k, i, i] < 0:
 				print('\nThere is a negative cost cycle.')
 				return None
 		
-		return res
+		return A.min()
 
 
 	def APSP_3(self):
@@ -148,6 +156,7 @@ if __name__ == '__main__':
 	fname = 'g3.txt'
 	S = Solution(fname)
 	res = S.APSP_2()
+	print(res)
 
 
 
