@@ -22,6 +22,7 @@ graph has no negative-cost cycles, then enter the length of its shortest shortes
 If two or more of the graphs have no negative-cost cycles, then enter the smallest of the lengths of their 
 shortest shortest paths in the box below.
 """
+import copy, time
 
 class Solution:
 
@@ -102,8 +103,39 @@ class Solution:
 		return res
 
 	def APSP_2(self):
-		# TODO: Floyd-Warshall algorithm
-		pass
+		# Floyd-Warshall algorithm
+
+		# n x n array, 0-based
+		A = [[float('inf') for _ in range(self.n)] for _ in range(self.n)]
+		
+		# first pass
+		for i in self.G:  # v is 1-based index
+			A[i-1][i-1] = 0
+			for (j, c) in self.G[i]:
+				A[i-1][j-1] = c
+		A_last = copy.deepcopy(A)
+
+		# main loop, looping through k
+		t_start = time.time()
+		for k in range(100):
+			print('Running step {} of total {}... time elapsed {:6.2f} minutes.'\
+				.format(k, self.n, (time.time() - t_start)/60), end='\r')
+			for i in range(self.n):
+				for j in range(self.n):
+					A[i][j] = min(A_last[i][j], A_last[i][k] + A_last[k][j])
+
+			A_last = copy.deepcopy(A)
+
+		# check for negative cost cycle, also check for result
+		res = float('inf')
+		for i in range(self.n):
+			res = min(A[i])
+			if A[i][i] < 0:
+				print('\nThere is a negative cost cycle.')
+				return None
+		
+		return res
+
 
 	def APSP_3(self):
 		# TODO: Johnson's algorithm
@@ -112,10 +144,10 @@ class Solution:
 
 
 if __name__ == '__main__':
-	fname = 'Bellman_Ford_debug.txt'
+	# fname = 'Bellman_Ford_debug.txt'
 	fname = 'g3.txt'
 	S = Solution(fname)
-	res = S.APSP_1()
+	res = S.APSP_2()
 
 
 
