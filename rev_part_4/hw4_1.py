@@ -24,6 +24,7 @@ shortest shortest paths in the box below.
 """
 import copy, time
 import numpy as np
+from heapq import heappush, heappop
 
 class Solution:
 
@@ -89,6 +90,27 @@ class Solution:
 
 		return dp
 
+	def dijkstra_heap(self, start, G):
+
+		# this is the implementation with heap, to get O(mlogn) time
+		# modified from here: https://gist.github.com/kachayev/5990802
+
+		Q = [(0, start)]  # this is the unvisited heap
+		visited = set()  # this is the visited nodes
+		dist = {}  # collect distances
+
+		while Q:  # as long as there are still unvisited nodes
+			(cost, node) = heappop(Q)
+			if node not in visited:
+				dist[node] = cost
+				visited.add(node)  # put it in the visited list
+
+				for child, weight in G[node]:
+					if child not in visited:
+						heappush(Q, (weight + cost, child))
+
+		return dist
+
 	def APSP_1(self):
 		""" 
 		vanilla implemenation of all-pair shortest path
@@ -144,10 +166,37 @@ class Solution:
 		
 		return A.min()
 
-
 	def APSP_3(self):
-		# TODO: Johnson's algorithm
-		pass
+		# Johnson's algorithm
+		t_start = time.time()
+		res = float('inf')
+		
+		# first pass, add a nominal vertex, and run Bellman Ford on it
+		self.G[self.n + 1] = [(h, 0) for h in range(1, self.n + 1)]
+
+		# get the dict of node weigths
+		weigths = self.Bellman_Ford(self.n+1, self.G)  # 1-index based
+		del self.G[self.n + 1]
+
+		# rewegith all the edges, to get the new graph
+		self.G_new = {}
+		for tail in self.G:
+			for h, w in self.G[tail]:
+				if tail not in self.G_new:
+					self.G_new[tail] = [(h, w + weigths[tail] - weigths[h])]
+				else:
+					self.G_new[tail].append((h, w + weigths[tail] - weigths[h]))
+
+		# run the Dijkstra
+		for s in self.G_new:
+			print('Running Dijkstra on node {} of total of {}... Time elapsed: {:5.1f} minutes.'\
+				.format(s, self.n, (time.time() - t_start)/60), end='\r')
+			dist = self.dijkstra_heap(s, self.G_new)
+			# get the un-weighted s-t path
+			for t in dist:
+				res = min(res, dist[t] - weigths[t] + weigths[s])
+
+		return res
 
 
 
@@ -155,8 +204,7 @@ if __name__ == '__main__':
 	# fname = 'Bellman_Ford_debug.txt'
 	fname = 'g3.txt'
 	S = Solution(fname)
-	res = S.APSP_2()
-	print(res)
+	res = S.APSP_3()
 
 
 
