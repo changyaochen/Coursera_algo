@@ -221,7 +221,7 @@ class Solution:
 
 
 if __name__ == '__main__':
-	fname = 'large.txt'
+	fname = 'large.txt'  # the answer is -6 (?)
 	# fname = 'g3.txt'
 	S = Solution(fname)
 	res = S.APSP_3()
