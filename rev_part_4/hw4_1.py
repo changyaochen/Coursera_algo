@@ -24,6 +24,7 @@ shortest shortest paths in the box below.
 """
 import copy, time
 import numpy as np
+from multiprocessing import Pool
 from heapq import heappush, heappop
 
 class Solution:
@@ -90,10 +91,11 @@ class Solution:
 
 		return dp
 
-	def dijkstra_heap(self, start, G):
+	def dijkstra_heap(self, start, G, weigths):
 
 		# this is the implementation with heap, to get O(mlogn) time
 		# modified from here: https://gist.github.com/kachayev/5990802
+		# modified for this purpose
 
 		Q = [(0, start)]  # this is the unvisited heap
 		visited = set()  # this is the visited nodes
@@ -109,7 +111,12 @@ class Solution:
 					if child not in visited:
 						heappush(Q, (weight + cost, child))
 
-		return dist
+		res = float('inf')
+		# get the un-weighted s-t path
+		for t in dist:
+			res = min(res, dist[t] - weigths[t] + weigths[start])
+
+		return res  
 
 	def APSP_1(self):
 		""" 
@@ -168,14 +175,12 @@ class Solution:
 
 	def APSP_3(self):
 		# Johnson's algorithm
-		t_start = time.time()
 		res = float('inf')
 		
 		# first pass, add a nominal vertex, and run Bellman Ford on it
 		self.G[self.n + 1] = [(h, 0) for h in range(1, self.n + 1)]
-
 		# get the dict of node weigths
-		weigths = self.Bellman_Ford(self.n+1, self.G)  # 1-index based
+		self.weights = self.Bellman_Ford(self.n+1, self.G)  # 1-index based
 		del self.G[self.n + 1]
 
 		# rewegith all the edges, to get the new graph
@@ -183,26 +188,41 @@ class Solution:
 		for tail in self.G:
 			for h, w in self.G[tail]:
 				if tail not in self.G_new:
-					self.G_new[tail] = [(h, w + weigths[tail] - weigths[h])]
+					self.G_new[tail] = [(h, w + self.weights[tail] - self.weights[h])]
 				else:
-					self.G_new[tail].append((h, w + weigths[tail] - weigths[h]))
+					self.G_new[tail].append((h, w + self.weights[tail] - self.weights[h]))
+				
+		# multi process run
+		n_proc = 10
 
-		# run the Dijkstra
-		for s in self.G_new:
-			print('Running Dijkstra on node {} of total of {}... Time elapsed: {:5.1f} minutes.'\
-				.format(s, self.n, (time.time() - t_start)/60), end='\r')
-			dist = self.dijkstra_heap(s, self.G_new)
-			# get the un-weighted s-t path
-			for t in dist:
-				res = min(res, dist[t] - weigths[t] + weigths[s])
+		with Pool(processes=n_proc) as pool:
+			res = pool.map(self.run_dijkstra, self.split_list(list(self.G_new.keys()), n_proc))
 
 		return res
+			
+
+	def run_dijkstra(self, start_list):
+		t_start = time.time()
+		res = float('inf')
+
+		for i, s in enumerate(start_list):
+			print('Running Dijkstra on node {} of total of {}... Time elapsed: {:5.1f} minutes.'\
+				.format(i+1, len(start_list), (time.time() - t_start)/60), end='\r')
+			res = min(res, self.dijkstra_heap(s, self.G_new, self.weights))
+
+		return res
+
+	def split_list(self, l, k):
+		chunk_size = len(l)//k+1
+		list_of_lists = [l[i:i+chunk_size] for i in range(0,len(l),chunk_size)]
+
+		return list_of_lists
 
 
 
 if __name__ == '__main__':
-	# fname = 'Bellman_Ford_debug.txt'
-	fname = 'g3.txt'
+	fname = 'large.txt'
+	# fname = 'g3.txt'
 	S = Solution(fname)
 	res = S.APSP_3()
 
